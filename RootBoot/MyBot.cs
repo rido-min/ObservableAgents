@@ -24,7 +24,7 @@ namespace RootBoot
 
         // NOTE: For this sample, this is tracked in memory.  Definitely not a production thing.
         private static bool _activeBotClient = false;
-        private readonly IChannelInfo _targetSkill;
+        private readonly IChannelInfo? _targetSkill;
 
 
         public MyBot(IChannelAdapter adapter, IChannelHost channelHost, IConversationIdFactory conversationIdFactory, IConfiguration configuration)
@@ -49,7 +49,7 @@ namespace RootBoot
                 if (_activeBotClient)
                 {
                     // Send the activity to the skill
-                    await SendToBot(turnContext, _targetSkill, cancellationToken);
+                    await SendToBot(turnContext, _targetSkill!, cancellationToken);
                     return;
                 }
             }
@@ -67,7 +67,7 @@ namespace RootBoot
                 _activeBotClient = true;
 
                 // Send the activity to the skill
-                await SendToBot(turnContext, _targetSkill, cancellationToken);
+                await SendToBot(turnContext, _targetSkill!, cancellationToken);
                 return;
             }
 
@@ -89,7 +89,7 @@ namespace RootBoot
 
             if (turnContext.Activity?.Value != null)
             {
-                eocActivityMessage += $"\n\nValue: {ProtocolJsonSerializer.ToJson(turnContext.Activity?.Value)}";
+                eocActivityMessage += $"\n\nValue: {ProtocolJsonSerializer.ToJson(turnContext.Activity?.Value!)}";
             }
 
             await turnContext.SendActivityAsync(MessageFactory.Text(eocActivityMessage), cancellationToken);
@@ -138,11 +138,11 @@ namespace RootBoot
         //
         public async Task<ResourceResponse> OnSendActivityAsync(ClaimsIdentity claimsIdentity, string conversationId, Activity activity, CancellationToken cancellationToken = default)
         {
-            return await ProcessActivityAsync(claimsIdentity, conversationId, null, activity, cancellationToken).ConfigureAwait(false);
+            return await ProcessActivityAsync(claimsIdentity, conversationId, null!, activity, cancellationToken).ConfigureAwait(false);
         }
         public async Task<ResourceResponse> OnSendToConversationAsync(ClaimsIdentity claimsIdentity, string conversationId, Activity activity, CancellationToken cancellationToken = default)
         {
-            return await ProcessActivityAsync(claimsIdentity, conversationId, null, activity, cancellationToken).ConfigureAwait(false);
+            return await ProcessActivityAsync(claimsIdentity, conversationId, null!, activity, cancellationToken).ConfigureAwait(false);
         }
         public async Task<ResourceResponse> OnReplyToActivityAsync(ClaimsIdentity claimsIdentity, string conversationId, string activityId, Activity activity, CancellationToken cancellationToken = default)
         {
@@ -153,7 +153,7 @@ namespace RootBoot
         {
             var botConversationReference = await _conversationIdFactory.GetBotConversationReferenceAsync(conversationId, cancellationToken).ConfigureAwait(false);
 
-            ResourceResponse resourceResponse = null;
+            ResourceResponse resourceResponse = null!;
             var callback = new BotCallbackHandler(async (turnContext, ct) =>
             {
                 activity.ApplyConversationReference(botConversationReference.ConversationReference);
@@ -232,7 +232,7 @@ namespace RootBoot
             throw new NotImplementedException();
         }
 
-        public Task<PagedMembersResult> OnGetConversationPagedMembersAsync(ClaimsIdentity claimsIdentity, string conversationId, int? pageSize = null, string continuationToken = null, CancellationToken cancellationToken = default)
+        public Task<PagedMembersResult> OnGetConversationPagedMembersAsync(ClaimsIdentity claimsIdentity, string conversationId, int? pageSize = null, string continuationToken = null!, CancellationToken cancellationToken = default)
         {
             throw new NotImplementedException();
         }
