@@ -10,7 +10,7 @@
 		<ProjectReference Include="..\ObservableAgents.ServiceDefaults\ObservableAgents.ServiceDefaults.csproj" />
 	</ItemGroup>
 	<ItemGroup>
-		<PackageReference Include="Microsoft.Agents.Authentication.Msal" Version="0.2.95-alpha" />
+		
 		<PackageReference Include="Microsoft.Agents.Hosting.AspNetCore" Version="0.2.95-alpha" />
 	</ItemGroup>
 </Project>

@@ -24,6 +24,18 @@ namespace SKBot
 
         protected override async Task OnMessageActivityAsync(ITurnContext<IMessageActivity> turnContext, CancellationToken cancellationToken)
         {
+
+            if (turnContext.Activity.Text.Contains("end") || turnContext.Activity.Text.Contains("stop"))
+            {
+                // Send End of conversation at the end.
+                var messageText = $"(Bot2)Ending conversation...";
+                await turnContext.SendActivityAsync(MessageFactory.Text(messageText, messageText, InputHints.IgnoringInput.ToString()), cancellationToken);
+                var endOfConversation = Activity.CreateEndOfConversationActivity();
+                endOfConversation.Code = EndOfConversationCodes.CompletedSuccessfully;
+                await turnContext.SendActivityAsync(endOfConversation, cancellationToken);
+                return;
+            }
+
             // Invoke the WeatherForecastAgent to process the message
             var forecastResponse = await _weatherAgent.InvokeAgentAsync(turnContext.Activity.Text, _chatHistory!);
             if (forecastResponse == null)
