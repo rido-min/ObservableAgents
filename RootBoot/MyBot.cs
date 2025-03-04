@@ -8,6 +8,8 @@ using Microsoft.Agents.Connector.Types;
 using Microsoft.Agents.Core.Interfaces;
 using Microsoft.Agents.Core.Models;
 using Microsoft.Agents.Core.Serialization;
+using ObservableAgents.ServiceDefaults;
+using System.Diagnostics.Metrics;
 using System.Globalization;
 using System.Security.Claims;
 
@@ -25,9 +27,10 @@ namespace RootBoot
         // NOTE: For this sample, this is tracked in memory.  Definitely not a production thing.
         private static bool _activeBotClient = false;
         private readonly IChannelInfo? _targetSkill;
+        private readonly System.Diagnostics.ActivitySource activitySource;
+        private readonly Meter meter;
 
-
-        public MyBot(IChannelAdapter adapter, IChannelHost channelHost, IConversationIdFactory conversationIdFactory, IConfiguration configuration)
+        public MyBot(IChannelAdapter adapter, IChannelHost channelHost, IConversationIdFactory conversationIdFactory, IConfiguration configuration, Instrumentation instrumentation)
         {
             _adapter = adapter ?? throw new ArgumentNullException(nameof(adapter));
             _channelHost = channelHost ?? throw new ArgumentNullException(nameof(channelHost));
@@ -38,6 +41,9 @@ namespace RootBoot
             // We use a single channel in this example.
             var targetSkillId = "SKBot";
             _channelHost.Channels.TryGetValue(targetSkillId, out _targetSkill);
+            activitySource = instrumentation.ActivitySource;
+            meter = instrumentation.Meter;
+            instrumentation.Meter.CreateCounter<long>("RootBotInstance", description: "The number of instances of the root bot").Add(1);
         }
 
         public override async Task OnTurnAsync(ITurnContext turnContext, CancellationToken cancellationToken = default)
@@ -48,9 +54,15 @@ namespace RootBoot
                 // Try to get the active skill
                 if (_activeBotClient)
                 {
-                    // Send the activity to the skill
-                    await SendToBot(turnContext, _targetSkill!, cancellationToken);
-                    return;
+
+                    using (var myActivity = activitySource.StartActivity("bot2bot"))
+                    {
+                        myActivity?.AddEvent(new("Init b2b"));
+                        // Send the activity to the skill
+                        await SendToBot(turnContext, _targetSkill!, cancellationToken);
+                        myActivity?.AddEvent(new("End b2b"));
+                        return;
+                    }
                 }
             }
 
@@ -59,15 +71,18 @@ namespace RootBoot
 
         protected override async Task OnMessageActivityAsync(ITurnContext<IMessageActivity> turnContext, CancellationToken cancellationToken)
         {
+            var otelAct = System.Diagnostics.Activity.Current;
             if (turnContext.Activity.Text.Contains("agent"))
             {
                 await turnContext.SendActivityAsync(MessageFactory.Text("Got it, connecting you to the agent..."), cancellationToken);
-
+                
+                otelAct?.AddEvent(new("Agent"));
                 // Save active skill in state
                 _activeBotClient = true;
 
                 // Send the activity to the skill
                 await SendToBot(turnContext, _targetSkill!, cancellationToken);
+                
                 return;
             }
 
@@ -111,6 +126,7 @@ namespace RootBoot
 
         private async Task SendToBot(ITurnContext turnContext, IChannelInfo targetChannel, CancellationToken cancellationToken)
         {
+            this.meter.CreateCounter<long>("SendToBot").Add(1);
             // Create a conversationId to interact with the skill and send the activity
             var options = new ConversationIdFactoryOptions
             {

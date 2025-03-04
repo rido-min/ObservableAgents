@@ -14,7 +14,7 @@ using System.Collections.Concurrent;
 using System.Globalization;
 using System.IdentityModel.Tokens.Jwt;
 
-namespace Microsoft.Extensions.Hosting;
+namespace ObservableAgents.ServiceDefaults;
 
 public static class AspNetExtensions
 {

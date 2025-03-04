@@ -4,6 +4,7 @@ using Microsoft.Agents.Hosting.AspNetCore;
 using Microsoft.Agents.State;
 using Microsoft.Agents.Storage;
 using Microsoft.SemanticKernel;
+using ObservableAgents.ServiceDefaults;
 using SKBot;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);

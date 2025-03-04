@@ -2,10 +2,16 @@
 // Licensed under the MIT License.
 
 using Microsoft.Agents.Hosting.AspNetCore;
+using OpenTelemetry.Trace;
+using OpenTelemetry.Logs;
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Resources;
 using RootBoot;
+using ObservableAgents.ServiceDefaults;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddSingleton<Instrumentation>();
 builder.Services.AddControllers();
 builder.Services.AddHttpClient();
 
