@@ -1,0 +1,6 @@
+@RootBoot_HostAddress = http://localhost:5182
+
+GET {{RootBoot_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
